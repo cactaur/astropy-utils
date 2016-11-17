@@ -88,6 +88,25 @@ class BrokenPowerLawIMF(object):
 
         return piece_sum
 
+    def _break_normalization(masses):
+        '''Return normalization for each mass compared to high-mass end. 
+
+        Return the normalization values that will make the differential mass
+        function continuous. As an example, before the first break mass, the
+        normalization value will be 1. After the first break mass, it will be
+        break_mass[0]**-alpha[1] / break_mass[0]**-alpha[2]. After the second
+        it will be break_mass[0]**-alpha[1] / break_mass[0]**-alpha[2] *
+        break_mass[1]**-alpha[1] / break_mass[1]*-alpha[2]. And so on.
+        '''
+        norm = 1
+        norms = np.zeros(masses.shape)
+        indices = np.searchsorted(self.break_masses, masses)
+        for i, m in enumerate(self.break_masses):
+            norms[indices==i] = norm
+            norm *= (self.break_masses[0]**self.indices[i] /
+                     self.break_masses[0]**self.indices[i+1])
+        return norms
+
     def number_fraction(self, highbound=None, lowbound=None, highM=None,
                         lowM=None):
         '''
@@ -117,6 +136,20 @@ class BrokenPowerLawIMF(object):
         frac = (
             self._integrate(highbound, lowbound) / self._integrate(highM, lowM)) 
         return frac
+
+    def differential_number(self, mass, highM=None, lowM=None):
+        '''Return the differential probability of the mass M.
+
+        In other words: dN/dM dM.
+        '''
+        if lowM is None:
+            lowM = self.lowM
+        if highM is None:
+            highM = self.highM
+
+        if mass > highM or mass < lowM:
+            raise ValueError("Mass is out of the acceptable mass range.")
+                             
 
 class PowerLawIMF(BrokenPowerLawIMF):
     '''Class representing an IMF with a generic power-law.'''
