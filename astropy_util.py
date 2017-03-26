@@ -39,8 +39,16 @@ def astropy_table_indices(table, column, values):
     If you need to get the indices of values located in the column of a table,
     this function will determine that for you.
     '''
+    indices = mark_selections_in_columns(table[column], values)
+    return indices
+
+def mark_selections_in_columns(col, values):
+    '''Return index indicating values are in col.
+
+    Returns an index array which is the size of col that indicates True when
+    col holds an entry equal to value, and False otherwise.'''
     if len(table) > len(values)**2:
-        return np.where(multi_logical_or(*[table[column] == v for v in values]))
+        return multi_logical_or(*[col == v for v in values])
     else:
         try:
             valset = set(values)
@@ -48,17 +56,21 @@ def astropy_table_indices(table, column, values):
             unmasked_values = values[values.mask == False]
             valset = set(unmasked_values)
         index = []
-        for v in table[column]:
+        for v in col:
             try:
                 incol = v in valset
             except TypeError:
                 incol = False
             index.append(incol)
-        return np.where(index)
+        return index
 
 def multi_logical_or(*arrs):
-    '''Performs a logical and for an arbitrary number of boolean arrays.'''
+    '''Performs a logical or for an arbitrary number of boolean arrays.'''
     return functools.reduce(np.logical_or, arrs, False)
+
+def multi_logical_and(*arrs):
+    '''Performs a logical or for an arbitrary number of boolean arrays.'''
+    return functools.reduce(np.logical_and, arrs, True)
 
 def astropy_table_row(table, column, value):
     '''Returns the row of the table which has the value in column.
@@ -114,22 +126,25 @@ def join_by_id(table1, table2, columnid1, columnid2, join_type="inner",
         tempcol1 = idproc(tempcol1)
         tempcol2 = idproc(tempcol2)
 
-    # If columnid1 = columnid2, then we can go straight to a join. If not, then columnid2
-    # needs to be rename to columnid1. If table2[columnid1] exists, then we have a
-    # problem and an exception should be thrown.
+    # If columnid1 = columnid2, then we can go straight to a join. If not, then 
+    # columnid2 needs to be renamed to columnid1. If table2[columnid1] exists, 
+    # then we have a problem and an exception should be thrown.
     if columnid1 != columnid2:
         if columnid1 not in table2.colnames:
             table2[columnid1] = tempcol2
         else: 
-            raise ValueError("Column {0} already exists in second table.")
+            raise ValueError(
+                "Column {0} already exists in second table.".format(columnid1))
 
-    newtable = join(table1, table2, keys=[columnid1]+additional_keys,
-                    join_type=join_type, table_names=list(conflict_suffixes),
-                    uniq_col_name="{col_name}{table_name}")
-
-    # Clean up the new table.
-    if columnid1 != columnid2:
-        del(table2[columnid1])
+    try:
+        newtable = join(
+            table1, table2, keys=[columnid1]+additional_keys, 
+            join_type=join_type, table_names=list(conflict_suffixes), 
+            uniq_col_name="{col_name}{table_name}")
+    finally:
+        # Clean up the new table.
+        if columnid1 != columnid2:
+            del(table2[columnid1])
 
     return newtable
 
@@ -292,3 +307,15 @@ def inspect_table_as_spreadsheet(table):
         table.write(fp.name, format="ascii.csv")
         libreargs = ["oocalc", fp.name]
         subprocess.run(libreargs)
+
+def inspect_table_in_topcat(table):
+    '''Opens the table in TOPCAT
+
+    TOPCAT is a useful tool for inspecting tables that are suited to be written
+    as FITS files. TOPCAT is actually much more extensible than we are using it
+    for, but it's helpful for this purpose.
+    '''
+    with tempfile.NamedTemporaryFile() as fp:
+        table.write(fp.name, format="fits", overwrite=True)
+        topcatargs = ["/home/regulus/simonian/topcat/topcat", fp.name]
+        subprocess.run(topcatargs)
