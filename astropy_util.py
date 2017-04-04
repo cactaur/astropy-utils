@@ -40,14 +40,14 @@ def astropy_table_indices(table, column, values):
     this function will determine that for you.
     '''
     indices = mark_selections_in_columns(table[column], values)
-    return indices
+    return np.where(indices)
 
 def mark_selections_in_columns(col, values):
     '''Return index indicating values are in col.
 
     Returns an index array which is the size of col that indicates True when
     col holds an entry equal to value, and False otherwise.'''
-    if len(table) > len(values)**2:
+    if len(col) > len(values)**2:
         return multi_logical_or(*[col == v for v in values])
     else:
         try:
@@ -97,8 +97,11 @@ def filter_column_from_subtable(table, column, selections):
     are not found in selections.
     '''
 
-    return table[get_complement_indices(
-        astropy_table_indices(table, column, selections), len(table))]
+    subindices = astropy_table_indices(table, column, selections)
+    print(subindices)
+    compindices = get_complement_indices(subindices, len(table))
+    print(compindices)
+    return table[compindices]
 
 def join_by_id(table1, table2, columnid1, columnid2, join_type="inner",
                conflict_suffixes=("_A", "_B"), idproc=None,
