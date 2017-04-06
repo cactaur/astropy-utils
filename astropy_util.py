@@ -4,6 +4,7 @@ import random
 import string
 import tempfile
 import subprocess
+import collections
 
 import numpy as np
 from astropy.table import Table, join
@@ -320,3 +321,36 @@ def inspect_table_in_topcat(table):
         table.write(fp.name, format="fits", overwrite=True)
         topcatargs = ["/home/regulus/simonian/topcat/topcat", fp.name]
         subprocess.run(topcatargs)
+
+###############################################################################
+# Caching large data files #
+###############################################################################
+
+class memoized(object):
+    '''Decorator. Cache's a function's return value each time it is called. If
+    called later with the same arguments, the cached value is returned (not
+    reevaluated).
+    '''
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+    def __call__(self, *args):
+        if not isinstance(args, collections.Hashable):
+            # uncacheable. a list, for instance.
+            # better to not cache than blow up
+            print("Uncacheable")
+            return self.func(*args)
+        if args in self.cache:
+            print("Cached")
+            return self.cache[args]
+        else:
+            print("Putting into cache")
+            value = self.func(*args)
+            self.cache[args] = value
+            return value
+    def __repr__(self):
+        '''Return the function's docstring.'''
+        return self.func.__doc__
+    def __get__(self, obj, objtype):
+        '''Support instance methods.'''
+        return functools.partial(self.__call__, obj)
