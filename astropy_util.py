@@ -5,6 +5,7 @@ import string
 import tempfile
 import subprocess
 import collections
+from itertools import cycle, islice
 
 import numpy as np
 from astropy.table import Table, join
@@ -356,3 +357,24 @@ class memoized(object):
     def __get__(self, obj, objtype):
         '''Support instance methods.'''
         return functools.partial(self.__call__, obj)
+
+###############################################################################
+# Itertools help #
+###############################################################################
+
+def roundrobin(*iterables):
+    '''roundrobin('ABC', 'D', 'EF') --> ADEBFC'''
+    # Recipe cedited to George Sakkis
+    pending = len(iterables)
+    nexts = cycle(iter(it).__next__ for it in iterables)
+    while pending:
+        try:
+            for next in nexts:
+                yield next()
+        except StopIteration:
+            pending -= 1
+            nexts = cycle(islice(nexts, pending))
+
+def take(n, iterable):
+    '''Return first n items of the iterable as a list.'''
+    return list(islice(iterable, n))
