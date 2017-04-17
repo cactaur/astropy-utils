@@ -378,3 +378,7 @@ def roundrobin(*iterables):
 def take(n, iterable):
     '''Return first n items of the iterable as a list.'''
     return list(islice(iterable, n))
+
+def flatten(listOfLists):
+    "Flatten one level of nesting"
+    return chain.from_iterable(listOfLists)
