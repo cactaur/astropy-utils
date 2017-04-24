@@ -5,7 +5,7 @@ import string
 import tempfile
 import subprocess
 import collections
-from itertools import cycle, islice
+from itertools import cycle, islice, chain
 
 import numpy as np
 from astropy.table import Table, join
