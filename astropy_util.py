@@ -354,3 +354,9 @@ class memoized(object):
     def __get__(self, obj, objtype):
         '''Support instance methods.'''
         return functools.partial(self.__call__, obj)
+
+def random_permutation(iterable, r=None):
+    """Random selection from itertools.product(*args, **kwds)"""
+    pool = tuple(iterable)
+    r = len(pool) if r is None else r
+    return tuple(random.sample(pool, r))
