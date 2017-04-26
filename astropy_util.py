@@ -358,6 +358,65 @@ class memoized(object):
         '''Support instance methods.'''
         return functools.partial(self.__call__, obj)
 
+def shortcut_file(filename, format="ascii.ecsv"):
+    ''' Return a decorator that both caches the result and saves it to a file.
+
+    This decorator should be used for commonly used snippets and combinations
+    of tables that are small enough to be read in quickly, and processed enough
+    that generating them from scratch is time-intensive.
+    '''
+
+    class Memorize(object):
+        '''
+        A function decorated with @memorize caches its return value every time
+        it is called. If the function is called later with the same arguments,
+        the cached value is returned (the function is not reevaluated). The
+        cache is stored in the filename provided in shortcut_file for reuse in
+        future executions. If the function corresponding to this decorated has
+        been updated, make sure to change the object at the given filename.
+        '''
+        def __init__(self, func):
+            self.func = func
+            self.filename = filename
+            if self.cache_exists():
+                self.read_cache()
+            else:
+                self.cache = {}
+
+        def __call__(self, *args):
+            if not isinstance(args, collections.Hashable):
+                return self.func(*args)
+            try:
+                return self.table
+            except AttributeError:
+                value = self.func(*args)
+                self.table = value
+                self.save_cache()
+                return value
+
+        def read_cache(self):
+            '''
+            Read the table in from the given location. This will take the
+            format given in the shortcut_file command.
+            '''
+            self.table = Table.read(self.filename, format=format)
+
+        def save_cache(self):
+            '''
+            Save the table into the given filename using the given format.
+            '''
+            self.table.write(self.filename, format=format)
+
+        def __repr__(self):
+            ''' Return the function's docstring. '''
+            return self.func.__doc__
+
+        def __get__(self, obj, objtype):
+            ''' Support instance methods. '''
+            return functools.partial(self.__call__, obj)
+
+    return Memorize
+
 ###############################################################################
 # Itertools help #
 ###############################################################################
