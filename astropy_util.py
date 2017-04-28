@@ -358,7 +358,7 @@ class memoized(object):
         '''Support instance methods.'''
         return functools.partial(self.__call__, obj)
 
-def shortcut_file(filename, format="ascii.ecsv"):
+def shortcut_file(filename, format="fits"):
     ''' Return a decorator that both caches the result and saves it to a file.
 
     This decorator should be used for commonly used snippets and combinations
@@ -378,21 +378,18 @@ def shortcut_file(filename, format="ascii.ecsv"):
         def __init__(self, func):
             self.func = func
             self.filename = filename
-            if self.cache_exists():
+            try:
                 self.read_cache()
-            else:
-                self.cache = {}
+            except FileNotFoundError:
+                self.table = None
 
         def __call__(self, *args):
-            if not isinstance(args, collections.Hashable):
-                return self.func(*args)
-            try:
-                return self.table
-            except AttributeError:
+            if self.table is None:
                 value = self.func(*args)
                 self.table = value
                 self.save_cache()
-                return value
+
+            return self.table
 
         def read_cache(self):
             '''
@@ -405,7 +402,11 @@ def shortcut_file(filename, format="ascii.ecsv"):
             '''
             Save the table into the given filename using the given format.
             '''
-            self.table.write(self.filename, format=format)
+            try:
+                self.table.write(self.filename, format=format)
+            except FileNotFoundError:
+                self.filename.parent.mkdir(parents=True)
+                self.table.write(self.filename, format=format)
 
         def __repr__(self):
             ''' Return the function's docstring. '''
