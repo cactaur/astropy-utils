@@ -100,9 +100,7 @@ def filter_column_from_subtable(table, column, selections):
     '''
 
     subindices = astropy_table_indices(table, column, selections)
-    print(subindices)
     compindices = get_complement_indices(subindices, len(table))
-    print(compindices)
     return table[compindices]
 
 def join_by_id(table1, table2, columnid1, columnid2, join_type="inner",
@@ -442,3 +440,9 @@ def take(n, iterable):
 def flatten(listOfLists):
     "Flatten one level of nesting"
     return chain.from_iterable(listOfLists)
+
+def random_permutation(iterable, r=None):
+    """Random selection from itertools.product(*args, **kwds)"""
+    pool = tuple(iterable)
+    r = len(pool) if r is None else r
+    return tuple(random.sample(pool, r))
