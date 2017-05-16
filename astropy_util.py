@@ -308,7 +308,10 @@ def inspect_table_as_spreadsheet(table):
     '''
     with tempfile.NamedTemporaryFile() as fp:
         table.write(fp.name, format="ascii.csv")
-        libreargs = ["oocalc", fp.name]
+        try:
+            libreargs = ["oocalc", fp.name]
+        except FileNotFoundError:
+            libreargs = ["localc", fp.name]
         subprocess.run(libreargs)
 
 def inspect_table_in_topcat(table):
