@@ -119,22 +119,26 @@ def join_by_id(table1, table2, columnid1, columnid2, join_type="inner",
     way, the function that does the processing should be given in idfilter. For
     no processing, "None" should be passed instead.
     '''
-    # There are some corner cases that should be dealt with in order for this
-    # function to work *perfectly*
-    tempcol1 = table1[columnid1]
-    tempcol2 = table2[columnid2]
 
     # Process the columns if need be.
     if idproc is not None:
-        tempcol1 = idproc(tempcol1)
-        tempcol2 = idproc(tempcol2)
+        # I want to duplicate the data so it won't be lost. And by keeping it
+        # in the table, it will be preserved when it is joined.
+        origcol1 = table1[columnid1]
+        origcol2 = table2[columnid2]
+        randomcol1 = generate_random_string(10)
+        randomcol2 = generate_random_string(10)
+        table1.rename_column(columnid1, randomcol1)
+        table2.rename_column(columnid2, randomcol2)
+        table1[columnid1] = idproc(origcol1)
+        table2[columnid2] = idproc(origcol2)
 
     # If columnid1 = columnid2, then we can go straight to a join. If not, then 
     # columnid2 needs to be renamed to columnid1. If table2[columnid1] exists, 
     # then we have a problem and an exception should be thrown.
     if columnid1 != columnid2:
         if columnid1 not in table2.colnames:
-            table2[columnid1] = tempcol2
+            table2[columnid1] = table2[columnid2]
         else: 
             raise ValueError(
                 "Column {0} already exists in second table.".format(columnid1))
@@ -148,6 +152,13 @@ def join_by_id(table1, table2, columnid1, columnid2, join_type="inner",
         # Clean up the new table.
         if columnid1 != columnid2:
             del(table2[columnid1])
+        if idproc is not None:
+            del(table1[columnid1])
+            del(table2[columnid2])
+            del(newtable[randomcol1])
+            del(newtable[randomcol2])
+            table1.rename_column(randomcol1, columnid1)
+            table2.rename_column(randomcol2, columnid2)
 
     return newtable
 
