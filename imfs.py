@@ -1,4 +1,7 @@
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import uniform
 
 
 def list_sorted(lst, ascending=True):
@@ -16,7 +19,6 @@ def list_sorted(lst, ascending=True):
         return all(lst[i] <= lst[i+1] for i in range(len(lst)-1))
     else:
         return all(lst[i] >= lst[i+1] for i in range(len(lst)-1))
-
 
 class BrokenPowerLawIMF(object):
     '''Class representing a generic multiply-broken power law.'''
@@ -174,3 +176,41 @@ class KroupaIMF(BrokenPowerLawIMF):
         super().__init__([2.3, 1.3, 0.3], [0.5*u.solMass, 0.08*u.solMass], 
                          highM, lowM)
 
+def plot_Salpeter_IMF():
+    '''Quality control plot to make sure I understand how to manipulate
+    IMFs.'''
+    maxmass = 80
+    minmass = 0.08
+    index = 2.35
+    normalization = (maxmass**(1-index)/(1-index) - 
+                     minmass**(1-index)/(1-index))
+
+    masses = np.logspace(np.log10(minmass), np.log10(maxmass))
+    salpeter_dist = masses**-index / normalization
+    plt.loglog(masses, salpeter_dist, 'k-')
+
+    salmasses = generate_salpeter_masses()
+    salbins = np.logspace(np.log10(minmass), np.log10(maxmass), 10)
+    plt.hist(salmasses, bins=salbins, normed=True)
+    
+
+    plt.xlim(plt.xlim()[::-1])
+    
+
+def generate_salpeter_masses():
+    '''Generate masses distributed according to Salpeter.'''
+    maxmass = 80
+    minmass = 0.08
+    index = 2.35
+    normalization = (maxmass**(1-index)/(1-index) - 
+                     minmass**(1-index)/(1-index))
+
+    uni = uniform.rvs(size=1000000)
+    masses = ((uni+minmass**(1-index)/normalization/(1-index)) * (1-index) * 
+              normalization)**(1/(1-index))
+    print(normalization)
+
+    return masses
+
+def plot_Kroupa():
+    '''Diagnostic plots for getting Kroupa IMFs.'''
