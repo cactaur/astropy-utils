@@ -227,8 +227,20 @@ def join_by_ra_dec(
     del(newtable[match_column])
     # Want to inherit table1 column naming.
     # This will require deleting the table2 coordinates from the new table.
-    del(newtable[ra2])
-    del(newtable[dec2])
+    try:
+        del(newtable[ra2])
+    except KeyError:
+        # This occurs when ra1=ra2.
+        assert ra1==ra2
+        newtable.rename_column(ra1+conflict_suffixes[0], ra1)
+        del(newtable[ra2+conflict_suffixes[1]])
+
+    try:
+        del(newtable[dec2])
+    except KeyError:
+        assert dec1==dec2
+        newtable.rename_column(dec1+conflict_suffixes[0], dec1)
+        del(newtable[dec2+conflict_suffixes[1]])
 
     return newtable
 
