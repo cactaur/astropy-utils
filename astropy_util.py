@@ -64,7 +64,7 @@ def mark_selections_in_columns(col, values):
             except TypeError:
                 incol = False
             index.append(incol)
-        return index
+        return np.array(index, dtype=np.bool)
 
 def multi_logical_or(*arrs):
     '''Performs a logical or for an arbitrary number of boolean arrays.'''
@@ -460,3 +460,17 @@ def random_permutation(iterable, r=None):
     pool = tuple(iterable)
     r = len(pool) if r is None else r
     return tuple(random.sample(pool, r))
+
+###############################################################################
+# Numpy help #
+###############################################################################
+
+def slicer_vectorized(arr, strindices):
+    '''Extract the substring at strindices from an array.
+
+    Given a string array arr, extract the substring elementwise corresponding
+    to the indices in strindices.'''
+    arr = np.array(arr, dtype=np.unicode_)
+    indexarr = np.array(strindices, dtype=np.int_)
+    temparr = arr.view('U1').reshape(len(arr), -1)[:,strindices]
+    return np.fromstring(temparr.tostring(), dtype='U'+str(len(indexarr)))
