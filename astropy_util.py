@@ -5,7 +5,7 @@ import string
 import tempfile
 import subprocess
 import collections
-from itertools import cycle, islice, chain
+from itertools import cycle, islice, chain, combinations
 
 import numpy as np
 from astropy.table import Table, join
@@ -227,8 +227,20 @@ def join_by_ra_dec(
     del(newtable[match_column])
     # Want to inherit table1 column naming.
     # This will require deleting the table2 coordinates from the new table.
-    del(newtable[ra2])
-    del(newtable[dec2])
+    try:
+        del(newtable[ra2])
+    except KeyError:
+        # This occurs when ra1=ra2.
+        assert ra1==ra2
+        newtable.rename_column(ra1+conflict_suffixes[0], ra1)
+        del(newtable[ra2+conflict_suffixes[1]])
+
+    try:
+        del(newtable[dec2])
+    except KeyError:
+        assert dec1==dec2
+        newtable.rename_column(dec1+conflict_suffixes[0], dec1)
+        del(newtable[dec2+conflict_suffixes[1]])
 
     return newtable
 
@@ -319,11 +331,12 @@ def inspect_table_as_spreadsheet(table):
     '''
     with tempfile.NamedTemporaryFile() as fp:
         table.write(fp.name, format="ascii.csv")
+        libreargs = ["oocalc", fp.name]
         try:
-            libreargs = ["oocalc", fp.name]
+            subprocess.run(libreargs)
         except FileNotFoundError:
-            libreargs = ["localc", fp.name]
-        subprocess.run(libreargs)
+            libreargs[0] = "localc"
+            subprocess.run(libreargs)
 
 def inspect_table_in_topcat(table):
     '''Opens the table in TOPCAT
@@ -460,6 +473,21 @@ def random_permutation(iterable, r=None):
     pool = tuple(iterable)
     r = len(pool) if r is None else r
     return tuple(random.sample(pool, r))
+
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+def consume(iterator, n):
+    "Advance the iterator n-steps ahead. If n is none, consume entirely."
+    # Use functions that consume iterators at C speed.
+    if n is None:
+        # feed the entire iterator into a zero-length deque
+        collections.deque(iterator, maxlen=0)
+    else:
+        # advance to the empty slice starting at position n
+        next(islice(iterator, n, n), None)
 
 ###############################################################################
 # Numpy help #
