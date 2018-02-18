@@ -64,7 +64,7 @@ def mark_selections_in_columns(col, values):
             except TypeError:
                 incol = False
             index.append(incol)
-        return index
+        return np.array(index)
 
 def multi_logical_or(*arrs):
     '''Performs a logical or for an arbitrary number of boolean arrays.'''
@@ -488,3 +488,7 @@ def consume(iterator, n):
     else:
         # advance to the empty slice starting at position n
         next(islice(iterator, n, n), None)
+
+def nth(iterable, n, default=None):
+    "Returns the nth item or a default value"
+    return next(islice(iterable, n, None), default)
