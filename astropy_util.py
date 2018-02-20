@@ -403,16 +403,16 @@ def shortcut_file(filename, format="fits"):
         def __init__(self, func):
             self.func = func
             self.filename = filename
-            try:
-                self.read_cache()
-            except FileNotFoundError:
-                self.table = None
+            self.table = None
 
         def __call__(self, *args):
             if self.table is None:
-                value = self.func(*args)
-                self.table = value
-                self.save_cache()
+                try:
+                    self.read_cache()
+                except FileNotFoundError:
+                    value = self.func(*args)
+                    self.table = value
+                    self.save_cache()
 
             return self.table
 
