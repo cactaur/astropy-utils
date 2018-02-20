@@ -64,11 +64,7 @@ def mark_selections_in_columns(col, values):
             except TypeError:
                 incol = False
             index.append(incol)
-<<<<<<< HEAD
         return np.array(index, dtype=np.bool)
-=======
-        return np.array(index)
->>>>>>> 1d7b84842b1d86cebf77402c91d1a79eaa7c9b21
 
 def multi_logical_or(*arrs):
     '''Performs a logical or for an arbitrary number of boolean arrays.'''
