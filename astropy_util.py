@@ -64,7 +64,7 @@ def mark_selections_in_columns(col, values):
             except TypeError:
                 incol = False
             index.append(incol)
-        return np.array(index)
+        return np.array(index, dtype=np.bool)
 
 def multi_logical_or(*arrs):
     '''Performs a logical or for an arbitrary number of boolean arrays.'''
@@ -403,16 +403,16 @@ def shortcut_file(filename, format="fits"):
         def __init__(self, func):
             self.func = func
             self.filename = filename
-            try:
-                self.read_cache()
-            except FileNotFoundError:
-                self.table = None
+            self.table = None
 
         def __call__(self, *args):
             if self.table is None:
-                value = self.func(*args)
-                self.table = value
-                self.save_cache()
+                try:
+                    self.read_cache()
+                except FileNotFoundError:
+                    value = self.func(*args)
+                    self.table = value
+                    self.save_cache()
 
             return self.table
 
@@ -517,3 +517,16 @@ def poisson_lower(n, sigma):
     low = n * (1 - 1/9/n - sigma/3/np.sqrt(n) + betas[sigma]*n**gammas[sigma])**3
     return low
 
+############################################################################
+# Numpy help #
+###############################################################################
+
+def slicer_vectorized(arr, strindices):
+    '''Extract the substring at strindices from an array.
+
+    Given a string array arr, extract the substring elementwise corresponding
+    to the indices in strindices.'''
+    arr = np.array(arr, dtype=np.unicode_)
+    indexarr = np.array(strindices, dtype=np.int_)
+    temparr = arr.view('U1').reshape(len(arr), -1)[:,strindices]
+    return np.fromstring(temparr.tostring(), dtype='U'+str(len(indexarr)))
