@@ -494,6 +494,30 @@ def nth(iterable, n, default=None):
     return next(islice(iterable, n, None), default)
 
 ###############################################################################
+# Binary confidence intervals #
+###############################################################################
+
+def poisson_upper(n, sigma):
+    '''Return the Poisson upper limit of the confidence interval.
+    
+    This is the upper limit for a given number of successes n, and the width of
+    the confidence interval is given in sigmas.'''
+    up = (n+1)*(1 - 1/9/(n+1) + sigma/3/np.sqrt(n+1))**3
+    return up
+
+def poisson_lower(n, sigma):
+    '''Return the Poisson lower limit of the confidence interval.
+
+    This is the lower limit for a given number of successes n, and the width of
+    the confidence interval is given in sigmas. This formula is from Gehrels
+    (1986) and contains tuned parameters.'''
+    betas = {1.0: 0.0, 2.0: 0.062, 3.0:0.222}
+    gammas = {1.0: 0.0, 2.0: -2.19, 3.0: -1.85}
+
+    low = n * (1 - 1/9/n - sigma/3/np.sqrt(n) + betas[sigma]*n**gammas[sigma])**3
+    return low
+
+############################################################################
 # Numpy help #
 ###############################################################################
 
