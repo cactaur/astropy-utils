@@ -12,7 +12,7 @@ import numpy as np
 from astropy.table import Table, join
 from astropy.coordinates import SkyCoord
 from astropy import units as u
-from astroquery.vizier import Vizier
+#from astroquery.vizier import Vizier
 
 ###############################################################################
 # Astropy Utilities                                                           #
