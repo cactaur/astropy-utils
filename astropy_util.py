@@ -7,6 +7,7 @@ import subprocess
 import collections
 from itertools import cycle, islice, chain, combinations
 
+import scipy
 import numpy as np
 from astropy.table import Table, join
 from astropy.coordinates import SkyCoord
@@ -517,6 +518,28 @@ def poisson_lower(n, sigma):
     low = n * (1 - 1/9/n - sigma/3/np.sqrt(n) + betas[sigma]*n**gammas[sigma])**3
     return low
 
+def binomial_upper(n1, n, sigma=1):
+    '''The upper limit of the one-sigma binomial probability.
+
+    This is the upper limit for a given number of successes n1 out of n trials.
+    This is a numerically exact solution to the value.'''
+    if sigma <= 0:
+        raise ValueError("The probability needs to be positive.")
+    cl = -scipy.special.erf(-sigma)
+    ul = np.where(n1 != n, scipy.special.betaincinv(n1+1, n-n1, cl), 1)
+
+    return ul
+
+def binomial_lower(n1, n, sigma=1):
+    '''The lower limit of the one-sigma binomial probability.
+
+    This is the lower limit for a given number of successes n1 out of n trials.
+    This provides a numerically exact solution to the value.'''
+    ll = 1 - binomial_upper(n-n1, n, sigma=sigma)
+    return ll
+
+
+
 ############################################################################
 # Numpy help #
 ###############################################################################
@@ -530,3 +553,22 @@ def slicer_vectorized(arr, strindices):
     indexarr = np.array(strindices, dtype=np.int_)
     temparr = arr.view('U1').reshape(len(arr), -1)[:,strindices]
     return np.fromstring(temparr.tostring(), dtype='U'+str(len(indexarr)))
+
+###############################################################################
+# Matplotlib Boundaries #
+###############################################################################
+
+def round_bound(lowbounds, upbounds, round_interval):
+    '''Return a lower and upper bound within the given rounding interval.
+    
+    Generally the bounds should be the value plus or minus the error.
+    
+    Round-interval should be the width of the tick marks.'''
+
+    minbound, maxbound = np.min(lowbounds), np.max(upbounds)
+
+    lowlim = (minbound // round_interval) * round_interval
+    highlim = ((maxbound // round_interval) + 1) * round_interval
+
+    return lowlim, highlim
+
