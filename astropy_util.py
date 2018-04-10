@@ -572,3 +572,21 @@ def round_bound(lowbounds, upbounds, round_interval):
 
     return lowlim, highlim
 
+def adjust_axes(ax, lowx, highx, lowy, highy, xdiff, ydiff):
+    '''Adjust the given axes to ensure all data fits within them.
+
+    Ensure that the given matplotlib axes can accomodate both the new x and y
+    limits provided in this function, as well as the internal x and y limits. 
+
+    The tick intervals for x and y should be given in xdiff and ydiff.'''
+    min_x, max_x = round_bound(lowx, highx, xdiff)
+    min_y, max_y = round_bound(lowy, highy, ydiff)
+    prev_xmin, prev_xmax = ax.get_xlim()
+    prev_ymin, prev_ymax = ax.get_ylim()
+    min_x = min(min_x, prev_xmin)
+    max_x = max(max_x, prev_xmax)
+    min_y = min(min_y, prev_ymin)
+    max_y = max(max_y, prev_ymax)
+
+    ax.set_xlim(min_x, max_x)
+    ax.set_ylim(min_y, max_y)
