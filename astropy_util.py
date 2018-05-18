@@ -297,6 +297,20 @@ def first_row_in_group(tablegroup):
     filteredtable = Table(rows=rowholder, names=tablegroup.colnames)
     return filteredtable
 
+def byte_to_unicode_cast(bytearr):
+    '''Cast a numpy byte array to unicode.
+
+    A change in Astropy 3.0 led to some columns from FITS files being stored
+    as numpy byte arrays instead of string. This is an explicit cast of this
+    column to a string array.
+    https://github.com/astropy/astropy/pull/6821
+
+    The text in the bug report seems to indicate that conversion from bytes
+    objects to unicode should be done transparently, but this doesn't seem to
+    be the case.'''
+    strcol = np.asarray(bytearr, np.unicode_)
+    return strcol
+
 ###############################################################################
 # Astroquery Catalog #
 ###############################################################################
