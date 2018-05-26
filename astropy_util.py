@@ -454,11 +454,13 @@ def shortcut_file(filename, format="fits", fill_value=-9999):
             format given in the shortcut_file command.
             '''
             self.table = Table.read(self.filename, format=format)
+            mask_numeric_fill_values(self.table, fill_value)
 
         def save_cache(self):
             '''
             Save the table into the given filename using the given format.
             '''
+            set_numeric_fill_values(self.table, fill_value)
             try:
                 self.table.write(self.filename, format=format)
             except FileNotFoundError:
