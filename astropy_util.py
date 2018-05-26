@@ -311,6 +311,15 @@ def byte_to_unicode_cast(bytearr):
     strcol = np.asarray(bytearr, np.unicode_)
     return strcol
 
+def set_numeric_fill_values(table, fill_value):
+    '''Fill all of the columns in table specified in colnames.
+    
+    This is a convenience function to be able to conveniently get a filled
+    table without having to manually fill a ton of columns.'''
+    for col in table.colnames:
+        if np.issubdtype(table[col].dtype, np.number):
+            table[col].fill_value = fill_value
+
 ###############################################################################
 # Astroquery Catalog #
 ###############################################################################
