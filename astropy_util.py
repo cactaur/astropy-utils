@@ -5,7 +5,7 @@ import string
 import tempfile
 import subprocess
 import collections
-from itertools import cycle, islice, chain, combinations
+from itertools import cycle, islice, chain, combinations, zip_longest
 
 import scipy
 import numpy as np
@@ -508,6 +508,14 @@ def nth(iterable, n, default=None):
     "Returns the nth item or a default value"
     return next(islice(iterable, n, None), default)
 
+def zip_equal(*iterables):
+    '''Unzips, throwing an error if iterables have different lengths.'''
+    sentinel = object()
+    for combo in zip_longest(*iterables, fillvalue=sentinel):
+        if sentinel in combo:
+            raise ValueError("Iterables have different lengths")
+        yield combo
+
 ###############################################################################
 # Binary confidence intervals #
 ###############################################################################
@@ -567,6 +575,20 @@ def slicer_vectorized(arr, strindices):
     indexarr = np.array(strindices, dtype=np.int_)
     temparr = arr.view('U1').reshape(len(arr), -1)[:,strindices]
     return np.fromstring(temparr.tostring(), dtype='U'+str(len(indexarr)))
+
+def check_null(arr, nullvalue):
+    '''Returns a boolean array indicating which values of arr are nullvalue.
+
+    The currently recognized types of nullvalues are floats, NaN, and
+    np.ma.masked. This function encapsulates using the appropriate methods,
+    because simply doing arr == nullvalue does not work all of the time,
+    particularly for NaN values.'''
+    if np.isnan(nullvalue):
+        return np.isnan(arr)
+    elif nullvalue is np.ma.masked:
+        return np.ma.getmaskarray(arr)
+    else:
+        return arr == nullvalue
 
 ###############################################################################
 # Matplotlib Boundaries #
