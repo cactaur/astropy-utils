@@ -320,6 +320,14 @@ def set_numeric_fill_values(table, fill_value):
         if np.issubdtype(table[col].dtype, np.number):
             table[col].fill_value = fill_value
 
+def mask_numeric_fill_values(table, fill_value):
+    '''Fill all of the columns in table specified in colnames.
+
+    This convenience function to mask numeric columns in a table.'''
+    for col in table.colnames:
+        if np.issubdtype(table[col].dtype, np.number):
+            table[col] = np.ma.masked_values(table[col], fill_value)
+
 ###############################################################################
 # Astroquery Catalog #
 ###############################################################################
@@ -407,7 +415,7 @@ class memoized(object):
         '''Support instance methods.'''
         return functools.partial(self.__call__, obj)
 
-def shortcut_file(filename, format="fits"):
+def shortcut_file(filename, format="fits", fill_value=-9999):
     ''' Return a decorator that both caches the result and saves it to a file.
 
     This decorator should be used for commonly used snippets and combinations
