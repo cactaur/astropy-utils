@@ -453,8 +453,12 @@ def shortcut_file(filename, format="fits", fill_value=-9999):
             Read the table in from the given location. This will take the
             format given in the shortcut_file command.
             '''
-            self.table = Table.read(self.filename, format=format)
+            self.table = Table.read(self.filename, format=format,
+                                    character_as_bytes=False)
             mask_numeric_fill_values(self.table, fill_value)
+            # If the dtype is fits, then the Astropy FITS program doesn't
+            # convert correctly between bytes and strings.
+            # See https://github.com/astropy/astropy/issues/5280
 
         def save_cache(self):
             '''
