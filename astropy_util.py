@@ -551,6 +551,44 @@ def poisson_upper(n, sigma):
     up = (n+1)*(1 - 1/9/(n+1) + sigma/3/np.sqrt(n+1))**3
     return up
 
+def scaled_poisson_upper(n, sigma, scale):
+    '''Return the upper limit of a scaled Poisson variable.
+
+    This is the upper limit for a given number of successes if the random
+    variable was scaled by a scale factor.'''
+    confidence_level = scipy.stats.norm.cdf(sigma)
+    upperlim = scipy.stats.chi2.ppf(1-(1-confidence_level)/scale, 2*n+2)/2
+    return upperlim
+
+def scaled_poisson_lower(n, sigma, scale):
+    '''Return the lower limit of a scaled Poisson variable.
+
+    This is the lower limit for a given number of successes if the random
+    variable was scaled by a scale factor.'''
+    confidence_level = scipy.stats.norm.cdf(sigma)
+    lowerlim = scipy.stats.chi2.ppf(1-confidence_level/scale, 2*n)/2
+    return lowerlim
+
+def poisson_upper_exact(n, sigma):
+    '''Return the Poisson upper limit of the confidence interval.
+
+    This is the upper limit for a given number of successes n, and the width of
+    the confidence interval is given in sigmas. This expression uses a
+    root-finding algorithm as opposed to an approximation.'''
+    confidence_level = scipy.stats.norm.cdf(sigma)
+    upperlim = scipy.stats.chi2.ppf(confidence_level, 2*n+2)/2
+    return upperlim
+
+def poisson_lower_exact(n, sigma):
+    '''Return the Poisson lower limit of the confidence interval.
+
+    This is the lower limit for a given number of successes n, and the width of
+    the confidence interval is given in sigmas. This expression uses a
+    root-finding algorithm as opposed to an approximation.'''
+    confidence_level = scipy.stats.norm.cdf(sigma)
+    lowerlim = scipy.stats.chi2.ppf(1-confidence_level, 2*n)/2
+    return lowerlim
+
 def poisson_lower(n, sigma):
     '''Return the Poisson lower limit of the confidence interval.
 
